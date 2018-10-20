@@ -40,8 +40,8 @@ var XZQLR = function() {
 			alts : [],
 			nonT : _p.nonT
 		};
-		for (let alt in _p.alts)
-			p.alts.push(alt);
+		for (let index in _p.alts)
+			p.alts.push(_p.alts[index]);
 		return p;
 	}
 
@@ -49,7 +49,9 @@ var XZQLR = function() {
 		var G = {};
 		G.main = X.stringToProd(g[0].nonT + '\'->' + g[0].nonT);
 		G.prods = [];
-		for (let prod in g)
+		for (let index in g)
+			G.prods.push(X.copyProd(g[index]));
+		return G;
 	}
 
 	return X;
