@@ -62,7 +62,7 @@ var XZQLR = function() {
 		G[G.main] = [];
 		G[G.main][g[0].nonT] = 1;
 		Object.defineProperty(G, "symset", {
-			value : [],
+			value : {'$':1},
 			enumerable : false
 		});
 		for (let index in g) {
@@ -70,6 +70,9 @@ var XZQLR = function() {
 				G[g[index].nonT] = [];
 			for (let aid in g[index].alts) {
 				let p = g[index].alts[aid];
+				if (p.indexOf('ε') >= 0 && p.length>1)
+					while (p.indexOf('ε')>=0) p = p.replace("ε","");
+				if (p.length <= 0) p = 'ε';
 				G[g[index].nonT][p] = 1;
 				for (let i = 0; i < p.length; i++)
 					G.symset[p[i]] = 1;
@@ -212,8 +215,10 @@ var XZQLR = function() {
 							B = prod[parseInt(dot)];
 							for (let y in G[B]) {
 								bs = X.FIRST(G, prod.slice(parseInt(dot) + 1) + s);
+								let _dot = '0';
+								if (y === 'ε') _dot = '1';
 								for (let b in bs)
-									if (addToI(I, B, y, '0', b))
+									if (addToI(I, B, y, _dot, b))
 										flag = 1;
 							}
 						}
@@ -242,6 +247,10 @@ var XZQLR = function() {
 			value : 0,
 			enumerable : false
 		});
+		Object.defineProperty(C, 'goto', {
+			value : [],
+			enumerable : false
+		});
 
 		let flag = 1;
 		while (flag) {
@@ -251,19 +260,110 @@ var XZQLR = function() {
 				for (let x in G.symset) {
 					let IX = X.goto(G, I, x);
 					let str = stringify(IX);
-					if (str !== '{}' && C[str] === undefined) {
-						let index = C.push(IX) - 1;
+					let index = C[str];
+					if (str !== '{}' && index === undefined) {
+						index = C.push(IX) - 1;
 						Object.defineProperty(C, str, {
 							value : index,
 							enumerable : false
-						});
+						});	
 						flag = 1;
 					}
+					addToI(C.goto, Iindex, index);
+					C.goto[Iindex][index] = x;
 				}
 			}
 		}
 		return C;
 	};
+
+	var addToAction = function(a, x, y, v) {
+		if (typeof a[x][y] !== 'object' || a[x][y] === undefined || a[x][y] === null)
+			a[x][y] = [];
+		a[x][y].push(v);
+	}
+	X.buildTable = function(G, C) {
+		let action = [];
+		let _goto = [];
+		for (let i = 0; i < C.length; i++) {
+			action[i] = [];
+			_goto[i] = [];
+			for (let j = 0; j < C.length; j++)
+				if (C.goto[i][j])
+					if (!G[C.goto[i][j]])
+						addToAction(action, i, C.goto[i][j], 's' + j);
+					else
+						addToAction(_goto, i, C.goto[i][j], j);
+		}
+		for (let i = 0; i < C.length; i++) {
+			I = C[i];
+			for (let nonT in I)
+				for (let prod in I[nonT])
+					for (let dot in I[nonT][prod])
+						if (parseInt(dot) === prod.length) {
+							if (nonT === G.main && prod.length === 1)
+								addToAction(action, i, '$', 'acc');
+							else
+								for (let s in I[nonT][prod][dot])
+									addToAction(action, i, s, 'r(' + nonT + '->' + prod + ')');
+								addToAction(action, i, 'ε', 'r(' + nonT + '->' + prod + ')');
+						}
+		}
+		return {
+			'action' : action,
+			'goto' : _goto,
+			'num_state' : C.length
+		};
+	};
+	var addRow = function() {
+		let s = "";
+		for (let i = 0; i < arguments.length; i++)
+			if (arguments[i]!==undefined) 
+				if (typeof arguments[i] === 'object') {
+					s = s + "<td>";
+					for (let j = 0; j < arguments[i].length; j++)
+						if (arguments[i][j]!==undefined)
+							s = s + arguments[i][j] + "<br>";
+					s = s + "</td>";
+				}
+				else
+					s = s + "<td>" + arguments[i] + "</td>";
+			else
+				s = s + "<td></td>";
+		return s;
+	};
+	X.showTable = function(G, T) {
+		let s = "<table id='ant' border=1>";
+		nTs = [];
+		Ts = [];
+		let symset = Object.keys(G.symset).sort();
+
+		for (let index = symset.length-1; index>=0; index--) {
+			let ss = symset[index];
+			//if (ss === 'ε') continue;
+			if (G[ss]!==undefined)
+				nTs.push(ss); 
+			else
+				Ts.push(ss);
+		}
+		s = s + "<tr><td rowspan=2>状态</td><td colspan=" + Ts.length + ">动作</td><td colspan=" + nTs.length + ">转移</td></tr>";
+		
+		for (let i = 0; i< Ts.length; i++)
+			s = s + addRow(Ts[i]);
+		for (let i = 0; i< nTs.length; i++)
+			s = s + addRow(nTs[i]);
+
+		for (let state = 0; state < T.num_state; state++) {
+			s = s + '<tr>' + addRow(state);
+			for (let i = 0; i < Ts.length; i++)
+				s = s + addRow(T.action[state][Ts[i]]);
+			for (let i = 0; i < nTs.length; i++)
+				s = s + addRow(T.goto[state][nTs[i]]);
+			s = s + "</tr>";
+		}
+		return s;
+	};
+
 	X.listI = function(C) {
 		let s = "";
 		for (let i = 0; i < C.length; i++) {
@@ -275,7 +375,7 @@ var XZQLR = function() {
 						for (let i = 0;i< parseInt(dot); i++)
 							s = s + prod[i];
 						s = s + '·';
-						for (let i = parseInt(dot); i< prod.length;i++)
+						for (let i = parseInt(dot); i < prod.length; i++)
 							s = s + prod[i];
 						s = s + ' , ';
 						for (let ss in C[i][nonT][prod][dot])
@@ -291,11 +391,15 @@ var XZQLR = function() {
 }
 
 X = XZQLR();
-s = ['S->V=E|E',
-	 'V->*E|x',
-	 'E->V'];
+s = ['S->AB',
+	 'A->aAb|ε',
+	 'B->Bb|b'];
 g=[];
 for (let index in s)
 	g.push(X.stringToProd(s[index]));
 G=X.extendGrammar(g);
-console.log(X.listI(X.items(G)));
+C=X.items(G);
+T = X.buildTable(G, C);
+console.log(T);
+console.log(X.listI(C));
+document.getElementById("lrtable").innerHTML = X.showTable(G, T)
