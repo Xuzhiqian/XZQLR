@@ -188,7 +188,6 @@ var XZQLR = function() {
 		let I = arguments[0];
 		let flag = 0;
 		for (let i = 1; i<arguments.length - 1; i++) {
-			console.log(typeof I[arguments[i]]);
 			if (typeof I[arguments[i]] !== 'object' || I[arguments[i]] === undefined || I[arguments[i]] === null) {
 				I[arguments[i]] = {};
 				flag = 1;
@@ -221,12 +220,12 @@ var XZQLR = function() {
 		}
 		return I;
 	};
-	X.goto = function(G, I, X) {
+	X.goto = function(G, I, x) {
 		let J = {};
 		for (let nonT in I)
 				for (let prod in I[nonT])
 					for (let dot in I[nonT][prod])
-						if (prod[parseInt(dot)] === X)
+						if (prod[parseInt(dot)] === x)
 							for (let s in I[nonT][prod][dot])
 								addToI(J, nonT, prod, parseInt(dot) + 1, s);
 		return X.closure(G, J);
@@ -249,8 +248,8 @@ var XZQLR = function() {
 			flag = 0;
 			for (let Iindex in C) {
 				let I = C[Iindex];
-				for (let X in G.symset) {
-					let IX = X.goto(G, I, X);
+				for (let x in G.symset) {
+					let IX = X.goto(G, I, x);
 					let str = stringify(IX);
 					if (str !== '{}' && C[str] === undefined) {
 						let index = C.push(IX) - 1;
@@ -264,17 +263,39 @@ var XZQLR = function() {
 			}
 		}
 		return C;
-	}
+	};
+	X.listI = function(C) {
+		let s = "";
+		for (let i = 0; i < C.length; i++) {
+			s = s + "I" + i + " : \n";
+			for (let nonT in C[i])
+				for (let prod in C[i][nonT])
+					for (let dot in C[i][nonT][prod]) {
+						s = s + nonT + ' -> ';
+						for (let i = 0;i< parseInt(dot); i++)
+							s = s + prod[i];
+						s = s + '·';
+						for (let i = parseInt(dot); i< prod.length;i++)
+							s = s + prod[i];
+						s = s + ' , ';
+						for (let ss in C[i][nonT][prod][dot])
+							s = s + ss + '/';
+						s = s.slice(0, s.length - 1) + '\n';
+					}
+			s = s + '\n';
+
+		}
+		return s;
+	};
 	return X;
 }
 
 X = XZQLR();
-s = ['S->BAC|m',
-	 'B->Bb|ε',
-	 'A->a|ε',
-	 'C->cC|t'];
+s = ['S->V=E|E',
+	 'V->*E|x',
+	 'E->V'];
 g=[];
 for (let index in s)
 	g.push(X.stringToProd(s[index]));
 G=X.extendGrammar(g);
-console.log(X.FIRST(G,'BAzSCS'));
+console.log(X.listI(X.items(G)));
