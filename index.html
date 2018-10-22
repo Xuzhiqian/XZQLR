@@ -4,20 +4,45 @@
 　　<title>XZQLR</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0, maximum-scale=1.0,user-scalable=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="utils.js"></script>
     <style type="text/css"> 
+    	body{
+    		text-align: center;
+
+    	}
 		table {
+			margin-top:20px;
 			text-align:center;
 		}
 		table td {
-			min-width : 5em;
+			min-width : 4em;
 			min-height : 1em;
+		}
+		textarea {
+			margin-top:30px;
+			font-family:'Courier New';
+			width:20em;
+			height:10em;
 		}
 	</style> 
 </head>
 <body>
-    <textarea id="input"></textarea>
-    <button id="gen">Generate</button>
+    <div><textarea id="input"></textarea></div>
+    <div><button id="gen" onclick='analyze()'>Analyze</button></div>
     <div id="lrtable"></div>
-    <script src="prod.js"></script>
+    <script src="LR.js"></script>
+    <script>
+    	X = XZQLR();
+    	function analyze() {
+		s = document.getElementById('input').value.split('\n');
+		g = [];
+		for (let index in s)
+			g.push(X.stringToProd(s[index]));
+		G = X.extendGrammar(g);
+		C = X.items(G);
+		T = X.buildTable(G, C);
+		document.getElementById("lrtable").innerHTML = showTable(G, T);
+	}
+    </script>
 </body>
 </html>
