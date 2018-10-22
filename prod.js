@@ -340,7 +340,7 @@ var XZQLR = function() {
 
 		for (let index = symset.length-1; index>=0; index--) {
 			let ss = symset[index];
-			//if (ss === 'ε') continue;
+			if (ss === 'ε') continue;
 			if (G[ss]!==undefined)
 				nTs.push(ss); 
 			else
@@ -391,9 +391,8 @@ var XZQLR = function() {
 }
 
 X = XZQLR();
-s = ['S->AB',
-	 'A->aAb|ε',
-	 'B->Bb|b'];
+s = ['L->MLb|a',
+	 'M->ε'];
 g=[];
 for (let index in s)
 	g.push(X.stringToProd(s[index]));
