@@ -110,26 +110,35 @@ var showTable = function(G, T) {
 		return s;
 	};
 
-var listI = function(C) {
+var drawGraph = function(C) {
+	let s = 'digraph G {rankdir="LR" node[shape="box" fontname="Courier New"] edge[fontname="Courier New"] ';
+	for (let state = 0; state < C.length; state++)
+		s = s + ' I' + state + '[label="I' +state + ':\n' + listI(C[state]) +'"] ';
+
+	for (let i = 0; i < C.length; i++)
+		for (let j = 0; j < C.length; j++)
+			if (C.goto[i]!==undefined && C.goto[i][j]!==undefined)
+				s = s + 'I' + i + '->' + 'I' + j + ' [label="' + C.goto[i][j] + '"] ';
+	s = s + '}';
+	return s;
+};
+
+
+var listI = function(I) {
 		let s = "";
-		for (let i = 0; i < C.length; i++) {
-			s = s + "I" + i + " : \n";
-			for (let nonT in C[i])
-				for (let prod in C[i][nonT])
-					for (let dot in C[i][nonT][prod]) {
-						s = s + nonT + ' -> ';
+			for (let nonT in I)
+				for (let prod in I[nonT])
+					for (let dot in I[nonT][prod]) {
+						s = s + nonT + '->';
 						for (let i = 0;i< parseInt(dot); i++)
 							s = s + prod[i];
 						s = s + '·';
 						for (let i = parseInt(dot); i < prod.length; i++)
 							s = s + prod[i];
-						s = s + ' , ';
-						for (let ss in C[i][nonT][prod][dot])
+						s = s + ', ';
+						for (let ss in I[nonT][prod][dot])
 							s = s + ss + '/';
 						s = s.slice(0, s.length - 1) + '\n';
 					}
-			s = s + '\n';
-
-		}
 		return s;
 	};
