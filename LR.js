@@ -249,7 +249,6 @@ var XZQLR = function() {
 							else
 								for (let s in I[nonT][prod][dot])
 									addToAction(action, i, s, 'r(' + nonT + '->' + prod + ')');
-								addToAction(action, i, 'ε', 'r(' + nonT + '->' + prod + ')');
 						}
 		}
 		return {

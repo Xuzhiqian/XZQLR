@@ -44,6 +44,7 @@ A->Aa|ε</textarea></div>
 		let s = document.getElementById('input').value.split('\n');
 		let g = [];
 		for (let index in s)
+			if (s[index].length > 0)
 			g.push(X.stringToProd(s[index]));
 		let G = X.extendGrammar(g);
 		let C = X.items(G);
